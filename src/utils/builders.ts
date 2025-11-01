@@ -180,12 +180,33 @@ const fbEventHTML = (pixelId: string, event: string, advMatchVars: Record<string
     .map(([k, v]) => `${k}: ${v || "''"}`)
     .join(', ');
   return `<script>
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init','${pixelId}',{${adv}});
-fbq('track','${event}',{}, {eventID: {{JS – Event ID}}});
+  // Facebook Pixel Code
+  !function(f, b, e, v, n, t, s) {
+    if (f.fbq) return;
+    n = f.fbq = function() {
+      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+    };
+    if (!f._fbq) f._fbq = n;
+    n.push = n;
+    n.loaded = !0;
+    n.version = '2.0';
+    n.queue = [];
+    t = b.createElement(e);
+    t.async = !0;
+    t.src = v;
+    s = b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t, s);
+  }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+  
+  // Initialize Pixel with Advanced Matching
+  fbq('init', '${pixelId}', {
+    ${adv}
+  });
+  
+  // Track Event with Event ID for deduplication
+  fbq('track', '${event}', {}, {
+    eventID: {{JS – Event ID}}
+  });
 </script>`;
 };
 
