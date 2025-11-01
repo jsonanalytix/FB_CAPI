@@ -21,6 +21,7 @@ type GTMTrigger = {
   triggerId?: string;
   type: string;
   filter?: any[];
+  customEventFilter?: any[];
 };
 type GTMTag = {
   name: string;
@@ -89,10 +90,13 @@ const constVar = (name: string, value: string): GTMVar => ({
 const trigCustomEvent = (eventName: string): GTMTrigger => ({
   name: `EV – ${eventName}`,
   type: 'CUSTOM_EVENT',
-  filter: [
+  customEventFilter: [
     {
-      type: 'MATCH_REGEX',
-      parameter: [p('arg0', 'TEMPLATE', '{{_event}}'), p('arg1', 'TEMPLATE', `^${eventName}$`)],
+      type: 'EQUALS',
+      parameter: [
+        { type: 'TEMPLATE', key: 'arg0', value: '{{_event}}' },
+        { type: 'TEMPLATE', key: 'arg1', value: eventName },
+      ],
     },
   ],
 });
@@ -557,10 +561,13 @@ export function buildServerContainerJSON(config: Config): any {
   const trig: GTMTrigger = {
     name: 'TR – FB CAPI Events',
     type: 'CUSTOM_EVENT',
-    filter: [
+    customEventFilter: [
       {
         type: 'MATCH_REGEX',
-        parameter: [p('arg0', 'TEMPLATE', '{{Event Name}}'), p('arg1', 'TEMPLATE', regex)],
+        parameter: [
+          { type: 'TEMPLATE', key: 'arg0', value: '{{Event Name}}' },
+          { type: 'TEMPLATE', key: 'arg1', value: regex },
+        ],
       },
     ],
   };
