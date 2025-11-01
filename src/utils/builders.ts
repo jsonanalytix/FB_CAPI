@@ -174,33 +174,42 @@ const ga4EventTagReporting = (name: string, params: Record<string, string>, ga4I
 // FACEBOOK PIXEL TAG BUILDERS (Web)
 // ============================================
 
-const fbEventHTML = (pixelId: string, event: string, advMatchVars: Record<string, string>) => {
-  const adv = Object.entries(advMatchVars)
-    .map(([k, v]) => `${k}: ${v || "''"}`)
-    .join(', ');
-  return `<script>
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init','${pixelId}',{${adv}});
-fbq('track','${event}',{}, {eventID: {{JS – Event ID}}});
-</script>`;
-};
-
-const fbPixelTagHTML = (
+// Facebook Pixel template tag builder
+const fbPixelTemplateTag = (
   event: string,
   pixelId: string,
   advVars: Record<string, string>
-): GTMTag => ({
-  name: `FB Pixel – ${event}`,
-  type: 'html',
-  parameter: [
-    p('html', 'TEMPLATE', fbEventHTML(pixelId, event, advVars)),
-    p('supportDocumentWrite', 'BOOLEAN', 'false'),
-  ],
-  firingTriggerId: [],
-});
+): GTMTag => {
+  // Map our advanced matching variable references to the format expected by the template
+  const advMatchingList = Object.entries(advVars).map(([key, value]) => ({
+    type: 'MAP',
+    map: [
+      { type: 'TEMPLATE', key: 'name', value: key },
+      { type: 'TEMPLATE', key: 'value', value },
+    ],
+  }));
+
+  return {
+    name: `FB Pixel – ${event}`,
+    type: 'cvt_5RM3Q', // Facebook Pixel Template Tag
+    parameter: [
+      p('pixelId', 'TEMPLATE', pixelId),
+      p('eventName', 'TEMPLATE', 'standard'),
+      p('standardEventName', 'TEMPLATE', event),
+      p('consent', 'BOOLEAN', 'true'),
+      p('advancedMatching', 'BOOLEAN', 'true'),
+      p('advancedMatchingList', 'LIST', advMatchingList),
+      p('eventId', 'TEMPLATE', '{{JS – Event ID}}'),
+      p('disablePushState', 'BOOLEAN', 'false'),
+      p('disableAutoConfig', 'BOOLEAN', 'false'),
+      p('enhancedEcommerce', 'BOOLEAN', 'false'),
+      p('dpoLDU', 'BOOLEAN', 'false'),
+      p('objectPropertiesFromVariable', 'BOOLEAN', 'false'),
+    ],
+    tagFiringOption: 'ONCE_PER_EVENT',
+    firingTriggerId: [],
+  };
+};
 
 // ============================================
 // FORM CAPTURE TAG (Web)
@@ -437,7 +446,7 @@ export function buildWebContainerJSON(config: Config): any {
   
   config.events.forEach((ev) => {
     const fbEventName = mapEventNameToFB(ev);
-    const fb = fbPixelTagHTML(fbEventName, config.pixelId, adv);
+    const fb = fbPixelTemplateTag(fbEventName, config.pixelId, adv);
     fb.firingTriggerId = [trigIdsByEvent[ev]];
     tag.push(fb);
   });
