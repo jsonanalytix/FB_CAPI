@@ -28,18 +28,6 @@ type GTMClient = {
   type: string;
   parameter?: Param[];
 };
-type GTMContainerExport = {
-  containerVersion: {
-    container: any;
-    variable: GTMVar[];
-    trigger: GTMTrigger[];
-    tag: GTMTag[];
-    client?: GTMClient[];
-    exportFormatVersion: number;
-    path?: string;
-    fingerprint?: string;
-  };
-};
 
 // ID factory
 let _id = 1;
@@ -333,7 +321,7 @@ const formCaptureTag = (selMain: SelectorSet, selUB: SelectorSet): GTMTag => ({
 // WEB CONTAINER BUILDER
 // ============================================
 
-export function buildWebContainerJSON(config: Config): GTMContainerExport {
+export function buildWebContainerJSON(config: Config): any {
   _id = 1;
   const variable: GTMVar[] = [];
   const trigger: GTMTrigger[] = [];
@@ -416,13 +404,17 @@ export function buildWebContainerJSON(config: Config): GTMContainerExport {
   tag.push(formCaptureTag(config.selectors.main, config.selectors.unbounce));
 
   return {
+    exportFormatVersion: 2,
+    exportTime: new Date().toISOString(),
     containerVersion: {
-      container: { name: 'CAPI – Web', usageContext: ['WEB'] },
-      variable,
-      trigger,
+      container: {
+        name: 'CAPI – Web',
+        usageContext: ['WEB']
+      },
       tag,
-      exportFormatVersion: 2,
-    },
+      trigger,
+      variable
+    }
   };
 }
 
@@ -430,7 +422,7 @@ export function buildWebContainerJSON(config: Config): GTMContainerExport {
 // SERVER CONTAINER BUILDER
 // ============================================
 
-export function buildServerContainerJSON(config: Config): GTMContainerExport {
+export function buildServerContainerJSON(config: Config): any {
   _id = 1;
   const variable: GTMVar[] = [];
   const trigger: GTMTrigger[] = [];
@@ -619,14 +611,18 @@ export function buildServerContainerJSON(config: Config): GTMContainerExport {
   tag.push(capi);
 
   return {
+    exportFormatVersion: 2,
+    exportTime: new Date().toISOString(),
     containerVersion: {
-      container: { name: 'CAPI – Server', usageContext: ['SERVER'] },
-      variable,
-      trigger,
+      container: {
+        name: 'CAPI – Server',
+        usageContext: ['SERVER']
+      },
       tag,
-      client,
-      exportFormatVersion: 2,
-    },
+      trigger,
+      variable,
+      client
+    }
   };
 }
 
