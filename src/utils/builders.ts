@@ -1,7 +1,13 @@
 import type { Config, SelectorSet } from '../types';
 
 // Helper types for GTM JSON structure
-type Param = { type: string; key: string; value?: any };
+type Param = { 
+  type: string; 
+  key: string; 
+  value?: any;
+  list?: any[];
+  map?: any[];
+};
 type GTMVar = {
   accountId?: string;
   containerId?: string;
@@ -32,7 +38,15 @@ type GTMClient = {
 // ID factory
 let _id = 1;
 const nextId = () => String(_id++);
-const p = (key: string, type: string, value: any): Param => ({ key, type, value });
+const p = (key: string, type: string, value: any): Param => {
+  if (type === 'LIST') {
+    return { key, type, list: value };
+  } else if (type === 'MAP') {
+    return { key, type, map: value };
+  } else {
+    return { key, type, value };
+  }
+};
 
 // ============================================
 // VARIABLE BUILDERS (Web)
