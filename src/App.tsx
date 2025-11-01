@@ -31,11 +31,11 @@ function App() {
       nonEmpty(config.pixelId) &&
       nonEmpty(config.accessToken) &&
       isValidGA4Id(config.ga4MeasurementId) &&
-      isValidUrl(config.taggingServerUrl) &&
       isValidUrl(config.transportUrl);
 
     const hasValidEvents =
       config.events.length > 0 &&
+      config.events.length <= 5 &&
       config.events.every((event) => nonEmpty(event) && isValidEventName(event));
 
     return hasRequiredFields && hasValidEvents;

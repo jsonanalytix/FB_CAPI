@@ -14,7 +14,6 @@ export type Config = {
   accessToken: string;
   testEventCode?: string;
   ga4MeasurementId: string;
-  taggingServerUrl: string;
   transportUrl: string;
   events: string[];
   selectors: {
@@ -28,7 +27,6 @@ export const defaultConfig: Config = {
   accessToken: '',
   testEventCode: '',
   ga4MeasurementId: '',
-  taggingServerUrl: '',
   transportUrl: '',
   events: ['page_view', 'lead_submit', 'contact_click', 'form_start', 'form_submit'],
   selectors: {
