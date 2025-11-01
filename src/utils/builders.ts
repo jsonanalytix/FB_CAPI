@@ -101,7 +101,7 @@ const trigCustomEvent = (eventName: string): GTMTrigger => ({
 // GA4 TAG BUILDERS (Web)
 // ============================================
 
-const ga4ConfigTag = (ga4Id: string, transportUrl: string): GTMTag => ({
+const ga4ConfigTag = (ga4Id: string, transportUrl: string, triggerId: string): GTMTag => ({
   name: 'GA4 – Config (transport)',
   type: 'googtag',
   parameter: [
@@ -117,7 +117,7 @@ const ga4ConfigTag = (ga4Id: string, transportUrl: string): GTMTag => ({
     ]),
   ],
   tagFiringOption: 'ONCE_PER_EVENT',
-  firingTriggerId: ['2147483647'], // All Pages
+  firingTriggerId: [triggerId],
 });
 
 const ga4EventTag = (name: string, params: Record<string, string>, ga4Id: string): GTMTag => ({
@@ -326,14 +326,15 @@ const formCaptureHTML = (selMain: SelectorSet, selUB: SelectorSet) => {
 </script>`;
 };
 
-const formCaptureTag = (selMain: SelectorSet, selUB: SelectorSet): GTMTag => ({
+const formCaptureTag = (selMain: SelectorSet, selUB: SelectorSet, triggerId: string): GTMTag => ({
   name: 'HTML – Capture Lead user_data',
   type: 'html',
   parameter: [
     p('html', 'TEMPLATE', formCaptureHTML(selMain, selUB)),
     p('supportDocumentWrite', 'BOOLEAN', 'false'),
   ],
-  firingTriggerId: ['2147483646'], // DOM Ready
+  firingTriggerId: [triggerId],
+  tagFiringOption: 'ONCE_PER_EVENT',
 });
 
 // ============================================
@@ -360,6 +361,24 @@ export function buildWebContainerJSON(config: Config): any {
   variable.push(constVar('CONST – GA4 MID', config.ga4MeasurementId));
   variable.push(constVar('CONST – Transport URL', config.transportUrl));
 
+  // All Pages trigger for GA4 Config
+  const allPagesTrigger: GTMTrigger = {
+    name: 'All Pages',
+    type: 'PAGEVIEW',
+  };
+  const allPagesId = nextId();
+  (allPagesTrigger as any).triggerId = allPagesId;
+  trigger.push(allPagesTrigger);
+
+  // DOM Ready trigger for Form Capture
+  const domReadyTrigger: GTMTrigger = {
+    name: 'DOM Ready',
+    type: 'DOM_READY',
+  };
+  const domReadyId = nextId();
+  (domReadyTrigger as any).triggerId = domReadyId;
+  trigger.push(domReadyTrigger);
+
   // Triggers per event
   const trigIdsByEvent: Record<string, string> = {};
   config.events.forEach((ev) => {
@@ -371,7 +390,7 @@ export function buildWebContainerJSON(config: Config): any {
   });
 
   // GA4 Config (transport)
-  const ga4Cfg = ga4ConfigTag(config.ga4MeasurementId, config.transportUrl);
+  const ga4Cfg = ga4ConfigTag(config.ga4MeasurementId, config.transportUrl, allPagesId);
   tag.push(ga4Cfg);
 
   // Parameter map common to GA4 events
@@ -420,7 +439,7 @@ export function buildWebContainerJSON(config: Config): any {
   });
 
   // Form capture tag
-  tag.push(formCaptureTag(config.selectors.main, config.selectors.unbounce));
+  tag.push(formCaptureTag(config.selectors.main, config.selectors.unbounce, domReadyId));
 
   return {
     exportFormatVersion: 2,
