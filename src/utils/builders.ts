@@ -103,15 +103,15 @@ const trigCustomEvent = (eventName: string): GTMTrigger => ({
 
 const ga4ConfigTag = (ga4Id: string, transportUrl: string): GTMTag => ({
   name: 'GA4 – Config (transport)',
-  type: 'gaawe',
+  type: 'googtag',
   parameter: [
-    p('measurementId', 'TEMPLATE', ga4Id),
-    p('fieldsToSet', 'LIST', [
+    p('tagId', 'TEMPLATE', ga4Id),
+    p('configSettingsTable', 'LIST', [
       {
         type: 'MAP',
         map: [
-          { type: 'TEMPLATE', key: 'name', value: 'transport_url' },
-          { type: 'TEMPLATE', key: 'value', value: transportUrl },
+          { type: 'TEMPLATE', key: 'parameter', value: 'transport_url' },
+          { type: 'TEMPLATE', key: 'parameterValue', value: transportUrl },
         ],
       },
     ]),
@@ -120,45 +120,50 @@ const ga4ConfigTag = (ga4Id: string, transportUrl: string): GTMTag => ({
   firingTriggerId: ['2147483647'], // All Pages
 });
 
-const ga4EventTag = (name: string, params: Record<string, string>): GTMTag => ({
+const ga4EventTag = (name: string, params: Record<string, string>, ga4Id: string): GTMTag => ({
   name: `GA4 – Event – ${name} (server)`,
   type: 'gaawe',
   parameter: [
-    p('eventName', 'TEMPLATE', name),
+    p('sendEcommerceData', 'BOOLEAN', 'false'),
     p(
-      'eventParameters',
+      'eventSettingsTable',
       'LIST',
       Object.entries(params).map(([k, v]) => ({
         type: 'MAP',
         map: [
-          { type: 'TEMPLATE', key: 'name', value: k },
-          { type: 'TEMPLATE', key: 'value', value: v },
+          { type: 'TEMPLATE', key: 'parameter', value: k },
+          { type: 'TEMPLATE', key: 'parameterValue', value: v },
         ],
       }))
     ),
-    p('sendToServerContainer', 'BOOLEAN', 'true'),
+    p('eventName', 'TEMPLATE', name),
+    p('measurementIdOverride', 'TEMPLATE', ga4Id),
   ],
   firingTriggerId: [],
+  tagFiringOption: 'ONCE_PER_EVENT',
 });
 
-const ga4EventTagReporting = (name: string, params: Record<string, string>): GTMTag => ({
+const ga4EventTagReporting = (name: string, params: Record<string, string>, ga4Id: string): GTMTag => ({
   name: `GA4 – Event – ${name} (reporting)`,
   type: 'gaawe',
   parameter: [
-    p('eventName', 'TEMPLATE', name),
+    p('sendEcommerceData', 'BOOLEAN', 'false'),
     p(
-      'eventParameters',
+      'eventSettingsTable',
       'LIST',
       Object.entries(params).map(([k, v]) => ({
         type: 'MAP',
         map: [
-          { type: 'TEMPLATE', key: 'name', value: k },
-          { type: 'TEMPLATE', key: 'value', value: v },
+          { type: 'TEMPLATE', key: 'parameter', value: k },
+          { type: 'TEMPLATE', key: 'parameterValue', value: v },
         ],
       }))
     ),
+    p('eventName', 'TEMPLATE', name),
+    p('measurementIdOverride', 'TEMPLATE', ga4Id),
   ],
   firingTriggerId: [],
+  tagFiringOption: 'ONCE_PER_EVENT',
 });
 
 // ============================================
@@ -386,11 +391,11 @@ export function buildWebContainerJSON(config: Config): any {
 
   // GA4 events (server) + (reporting)
   config.events.forEach((ev) => {
-    const tServer = ga4EventTag(ev, ga4Params);
+    const tServer = ga4EventTag(ev, ga4Params, config.ga4MeasurementId);
     tServer.firingTriggerId = [trigIdsByEvent[ev]];
     tag.push(tServer);
 
-    const tRpt = ga4EventTagReporting(ev, ga4Params);
+    const tRpt = ga4EventTagReporting(ev, ga4Params, config.ga4MeasurementId);
     tRpt.firingTriggerId = [trigIdsByEvent[ev]];
     tag.push(tRpt);
   });
